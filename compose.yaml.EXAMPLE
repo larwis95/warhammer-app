@@ -7,8 +7,10 @@ services:
       dockerfile: go.dockerfile
     environment:
       DATABASE_URL: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable"
+      SALT_ROUNDS: YOUR_SALT_ROUNDS_HERE
     ports:
       - "8000:8000"
+      - "8080:8080"
     depends_on:
       - db
   db:
