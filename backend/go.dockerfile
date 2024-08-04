@@ -1,3 +1,4 @@
+# use official Golang image
 FROM golang:latest
 
 # set working directory
@@ -13,7 +14,7 @@ RUN go get -d -v ./...
 RUN go build -o api .
 
 #EXPOSE the port
-EXPOSE 8000
+EXPOSE 8080
 
 # Run the executable
 CMD ["./api"]
