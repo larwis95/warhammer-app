@@ -1,50 +1,24 @@
 package main
 
 import (
-	"api/graph"
-	"fmt"
-	"log"
+	"api/controllers"
+	"api/db"
+	"api/middleware"
 	"net/http"
-	"os"
 
-	"api/models"
-
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"github.com/gorilla/mux"
 )
 
-const defaultPort = "8080"
-
 func main() {
-  db := connectDB()
-  fmt.Println(db.Name())
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
+  postgresDB := db.Connect()
+  db.AutoMigrate(postgresDB)
+  router := mux.NewRouter()
+  router.HandleFunc("/api/users/create", controllers.CreateUser(postgresDB)).Methods("POST")
+  router.HandleFunc("/api/users", controllers.GetUsers(postgresDB)).Methods("GET")
+  router.HandleFunc("/api/users/{id}", controllers.GetUser(postgresDB)).Methods("GET")
+  router.HandleFunc("/api/users/update/{id}", controllers.UpdateUser(postgresDB)).Methods("PUT")
+  router.HandleFunc("/api/users/delete/{id}", controllers.DeleteUser(postgresDB)).Methods("DELETE")
+  enhancedRouter := middleware.EnableCors(middleware.JsonContentType(router))
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
-
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
-
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
-}
-
-
-func connectDB() *gorm.DB {
-  dbURL := os.Getenv("DATABASE_URL")
-  db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
-  if err != nil {
-    panic("failed to connect database")
-  }
-  db.AutoMigrate(&models.User{})
-  db.AutoMigrate(&models.Allegiance{})
-  db.AutoMigrate(&models.GrandAlliance{})
-  db.AutoMigrate(&models.Unit{})
-
-  return db
+  http.ListenAndServe(":8080", enhancedRouter)
 }
