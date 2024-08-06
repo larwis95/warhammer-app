@@ -67,3 +67,31 @@ func DeleteUser(db *gorm.DB) http.HandlerFunc  {
     fmt.Fprintf(w, "User deleted")
   })
 }
+
+func Login(db *gorm.DB) http.HandlerFunc {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    var user models.User
+    json.NewDecoder(r.Body).Decode(&user)
+    inputedPassword := user.Password
+
+    existingUser := db.Where("email = ?", user.Email).First(&user)
+    if existingUser.Error != nil {
+      err.Handle(existingUser.Error, w)
+      return
+    }
+    isCorrectPassword := user.IsCorrectPassword(inputedPassword)
+    if isCorrectPassword != nil {
+      passWordErr := isCorrectPassword
+      err.Handle(passWordErr, w)
+      return
+    }
+    w.Header().Set("Content-Type", "application/json")
+    data := map[string]interface{}{
+        "id":    user.ID,
+        "name":  user.Name,
+        "email": user.Email,
+        "message": "Login successful",
+    }
+    json.NewEncoder(w).Encode(data)
+   })
+}
