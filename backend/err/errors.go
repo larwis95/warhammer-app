@@ -1,6 +1,7 @@
 package err
 
 import (
+	"api/models"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,6 +13,7 @@ type ErrorResponse struct {
   Error string `json:"error"`
   Code int `json:"code"`
 }
+
 
 var gormErrors = []error{gorm.ErrDuplicatedKey, gorm.ErrRecordNotFound}
 
@@ -28,6 +30,8 @@ var errorMap = map[error]ErrorResponse{
 
 func Handle(e error, w http.ResponseWriter) {
   isGormError := false
+  isAuthError := errors.As(e, &models.AuthError{})
+
   // Check if the error is a gorm error
   for _, err := range gormErrors {
     if errors.Is(e, err) {
@@ -41,7 +45,11 @@ func Handle(e error, w http.ResponseWriter) {
     json.NewEncoder(w).Encode(map[string]string{"error": errorMap[e].Error})
     return
   }
-
+  if isAuthError {
+    w.WriteHeader(http.StatusUnauthorized)
+    json.NewEncoder(w).Encode(map[string]string{"error": e.Error()})
+    return
+  }
   // Default error response
   w.WriteHeader(http.StatusInternalServerError)
   json.NewEncoder(w).Encode(map[string]string{"error": e.Error()})
