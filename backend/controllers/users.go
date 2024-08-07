@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
+	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 )
 
@@ -71,6 +73,13 @@ func DeleteUser(db *gorm.DB) http.HandlerFunc  {
 func Login(db *gorm.DB) http.HandlerFunc {
   return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     var user models.User
+    var (
+      key []byte
+      t  *jwt.Token
+      s string
+    )
+    key = []byte(os.Getenv("JWT_SECRET"))
+
     json.NewDecoder(r.Body).Decode(&user)
     inputedPassword := user.Password
 
@@ -86,11 +95,18 @@ func Login(db *gorm.DB) http.HandlerFunc {
       return
     }
     w.Header().Set("Content-Type", "application/json")
+    t = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+      "id": user.ID,
+      "name": user.Name,
+      "email": user.Email,
+    })
+    s, _ = t.SignedString(key)
     data := map[string]interface{}{
-        "id":    user.ID,
-        "name":  user.Name,
-        "email": user.Email,
-        "message": "Login successful",
+      "token": s,
+      "id": user.ID,
+      "name": user.Name,
+      "email": user.Email,
+      "message": "Login successful",
     }
     json.NewEncoder(w).Encode(data)
    })

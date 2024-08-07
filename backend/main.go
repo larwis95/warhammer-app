@@ -11,7 +11,7 @@ import (
 
 func main() {
   postgresDB := db.Connect()
-  db.AutoMigrate(postgresDB)
+  defer db.AutoMigrate(postgresDB)
   router := mux.NewRouter()
   router.HandleFunc("/api/users/create", controllers.CreateUser(postgresDB)).Methods("POST")
   router.HandleFunc("/api/users", controllers.GetUsers(postgresDB)).Methods("GET")
