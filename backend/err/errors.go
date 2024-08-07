@@ -19,11 +19,11 @@ var gormErrors = []error{gorm.ErrDuplicatedKey, gorm.ErrRecordNotFound}
 
 var errorMap = map[error]ErrorResponse{
   gorm.ErrDuplicatedKey: {
-    Error: "User already exists",
+    Error: "Record already exists.",
     Code: http.StatusConflict,
   },
   gorm.ErrRecordNotFound: {
-    Error: "User not found",
+    Error: "Record not found.",
     Code: http.StatusNotFound,
   },
 }
