@@ -4,7 +4,6 @@ import (
 	"api/err"
 	"api/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -36,7 +35,16 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
     var users []models.User
     db.Find(&users)
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(users)
+    var data []map[string]interface{}
+    for i := range users {
+      data = append(data, map[string]interface{}{
+        "id": users[i].ID,
+        "name": users[i].Name,
+        "email": users[i].Email,
+      })
+    }
+
+    json.NewEncoder(w).Encode(data)
   })
 }
 
@@ -45,7 +53,12 @@ func GetUser(db *gorm.DB) http.HandlerFunc {
     var user models.User
     db.First(&user, r.URL.Query().Get("id"))
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(user)
+    data := map[string]interface{}{
+      "id": user.ID,
+      "name": user.Name,
+      "email": user.Email,
+    }
+    json.NewEncoder(w).Encode(data)
   })
 }
 
@@ -56,7 +69,12 @@ func UpdateUser(db *gorm.DB) http.HandlerFunc  {
     json.NewDecoder(r.Body).Decode(&user)
     db.Save(&user)
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(user)
+    data := map[string]interface{}{
+      "id": user.ID,
+      "name": user.Name,
+      "email": user.Email,
+    }
+    json.NewEncoder(w).Encode(data)
   })
 }
 
@@ -66,7 +84,7 @@ func DeleteUser(db *gorm.DB) http.HandlerFunc  {
     db.First(&user, r.URL.Query().Get("id"))
     db.Delete(&user)
     w.Header().Set("Content-Type", "application/json")
-    fmt.Fprintf(w, "User deleted")
+    json.NewEncoder(w).Encode(map[string]string{"message": "User deleted"})
   })
 }
 

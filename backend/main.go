@@ -13,13 +13,16 @@ func main() {
   postgresDB := db.Connect()
   defer db.AutoMigrate(postgresDB)
   router := mux.NewRouter()
+  authRoutes := router.Methods("POST", "GET", "PUT", "DELETE").Subrouter()
   router.HandleFunc("/api/users/create", controllers.CreateUser(postgresDB)).Methods("POST")
-  router.HandleFunc("/api/users", controllers.GetUsers(postgresDB)).Methods("GET")
-  router.HandleFunc("/api/users/{id}", controllers.GetUser(postgresDB)).Methods("GET")
-  router.HandleFunc("/api/users/update/{id}", controllers.UpdateUser(postgresDB)).Methods("PUT")
-  router.HandleFunc("/api/users/delete/{id}", controllers.DeleteUser(postgresDB)).Methods("DELETE")
+  authRoutes.HandleFunc("/api/users", controllers.GetUsers(postgresDB)).Methods("GET")
+  authRoutes.HandleFunc("/api/users/{id}", controllers.GetUser(postgresDB)).Methods("GET")
+  authRoutes.HandleFunc("/api/users/update/{id}", controllers.UpdateUser(postgresDB)).Methods("PUT")
+  authRoutes.HandleFunc("/api/users/delete/{id}", controllers.DeleteUser(postgresDB)).Methods("DELETE")
   router.HandleFunc("/login", controllers.Login(postgresDB)).Methods("POST")
+  authRoutes.Use(middleware.AuthMiddleware)
   enhancedRouter := middleware.EnableCors(middleware.JsonContentType(router))
+
 
   http.ListenAndServe(":8080", enhancedRouter)
 }
