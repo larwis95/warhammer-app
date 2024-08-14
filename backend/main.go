@@ -20,6 +20,7 @@ func main() {
   authRoutes.HandleFunc("/api/users/update/{id}", controllers.UpdateUser(postgresDB)).Methods("PUT")
   authRoutes.HandleFunc("/api/users/delete/{id}", controllers.DeleteUser(postgresDB)).Methods("DELETE")
   router.HandleFunc("/login", controllers.Login(postgresDB)).Methods("POST")
+  router.HandleFunc("/api/units/compare", controllers.CompareUnits()).Methods("GET")
   authRoutes.Use(middleware.AuthMiddleware)
   enhancedRouter := middleware.EnableCors(middleware.JsonContentType(router))
 
